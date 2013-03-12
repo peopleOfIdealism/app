@@ -1,0 +1,24 @@
+SUB_DIRS = main lib motor log timer
+    #SUB_DIRS = alarm av com dev email glblib main ntp rtc sdk platform snmp storage timer update watchdog webserver drv iva
+
+SUB_OBJS = $(foreach dir, $(SUB_DIRS), $(dir)/build_in.o)
+
+export SUB_OBJS
+
+.PHONY: $(SUB_DIRS)
+.PHONY: all clean
+.PHONY: $(SUB_OBJS)
+
+all:$(ROBOT)
+
+$(ROBOT):$(SUB_OBJS)
+	$(CC) -o $@ $(SUB_OBJS) $(GLB_OBJ) $(CFLAGS)
+
+$(SUB_OBJS):$(SUB_DIRS)
+
+$(SUB_DIRS):
+	make -C $@
+
+clean:
+	-rm $(ROBOT)
+	for dir in $(SUB_DIRS); do $(MAKE) -C $$dir clean; done

@@ -1,0 +1,82 @@
+/*
+*lib_motor.c
+*
+*this lib give the motor function
+*/
+
+#include "lib_print.h"
+int print_message(const char* modules, const unsigned int privilege,
+            const char *file, const int line, const char *format, ...)
+{
+    unsigned int        len;
+    unsigned int        len_msg;
+    time_t              second;
+    struct tm           *msg_time;
+    LOG_MESSAGE         print_msg;
+    va_list             arg_list;
+    char                msg_body[MAX_MESSAGE_LENGTH];
+    
+    memset(msg_body, 0, MAX_MESSAGE_LENGTH);
+    memset(&print_msg, 0, sizeof(LOG_MESSAGE));
+    //    memset(msg_body, 0, MAX_MESSAGE_LENGTH);
+    if(-1 == time(&second)){
+        msg_print("LOG", msg_pri_alert, "get time error");
+        second = 0;
+    }
+    msg_time = localtime(&second);
+
+    len = sprintf(msg_body, "[%02d:%02d:%02d %04d-%02d-%02d] %10s %d | ", 
+        msg_time->tm_hour, msg_time->tm_min, msg_time->tm_sec, (msg_time->tm_year+1900), msg_time->tm_mon, msg_time->tm_mday,
+        modules, privilege);
+
+/*
+    len = sprintf(msg_body, "[%s] %10s %d | ", asctime(msg_time), modules, privilege);
+*/
+    va_start(arg_list, format);
+    len_msg = vsprintf((char*)((int)msg_body+len), (const char*)format, arg_list);
+    va_end(arg_list);
+
+    if('\n' == msg_body[len+len_msg-1])
+    {
+        msg_body[len+len_msg-1] = '\0';
+    }
+
+    if(len_msg > COMM_LOG_MSG_LEN)
+    {
+        len_msg = COMM_LOG_MSG_LEN;
+    }
+    
+    strncpy(print_msg.msg, (char*)((int)msg_body+len), len_msg);
+    len= len+len_msg;
+    
+    len += sprintf((char*)((int)msg_body+len), " [%s - %d]\n", file, line);
+    
+    if (len > MAX_MESSAGE_LENGTH || privilege > msg_pri_comm)
+    {
+        return ROBOT_OK;
+    }
+    switch(privilege)
+    {         
+    case msg_pri_alert:
+    case msg_pri_error:
+    case msg_pri_comm:
+        {
+            fwrite(msg_body, len, 1, stdout);
+            fflush(stdout);
+        }
+    //case msg_pri_comm:
+    default:
+        {
+            print_msg.msg_time = *msg_time;
+            print_msg.msg_level = privilege;
+            strcpy(print_msg.mod_name,modules);
+            //msg_net_print(&print_msg);
+        }
+            break;
+        
+
+    }
+    return ROBOT_OK;
+}
+
+

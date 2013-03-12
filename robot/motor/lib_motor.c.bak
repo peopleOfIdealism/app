@@ -1,0 +1,239 @@
+/*
+*lib_motor.c
+*
+*this lib give the motor function
+*/
+
+#include "lib_motor.h"
+
+#define MOTOR "/dev/moto_dev"
+
+#define MAXSPEED    100
+
+int fd;
+
+motor_ctrl glb_motor;
+
+int checkIn(int n, int max)
+{
+    if(n > max)
+        {
+            msg_print("motor", msg_pri_error, "input overflow:input %d max %d", n, max);
+            return max;
+        }
+    else if(n < -max)
+        {
+           msg_print("motor", msg_pri_error, "input overflow:input %d max %d", n, max);
+            return -max;
+        }
+    else
+        return n;
+    
+}
+
+/********************************
+*convert 0~100 to specified grade speed,now is 10
+*********************************/
+motor_speed speed(int n)
+{
+    //put input speed into pwm output
+    motor_speed m_speed;
+    int speed_t = n/10;
+    if(0 == n)
+        {
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+        }
+    
+    switch(speed_t)
+    {
+        case 0:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 1:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 2:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 3:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 4:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 5:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 6:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 7:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 8:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 9:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            break;
+            case 10:
+            m_speed.ontime = ;
+            m_speed.offtime = ;
+            
+            break;
+            default:
+                msg_print("motor", msg_pri_error, "error speed %d %d", n, 
+                speed_t);
+                return ERR_MOTOR;
+            
+    }
+    return m_speed;
+}
+
+/*
+void motor_l_forward(int fd)
+{
+    ioctl(fd, MOTO_L_F);
+}
+
+void motor_l_backward(int fd)
+{
+    ioctl(fd, MOTO_L_B);
+}
+
+void motor_l_on(int fd)
+{
+    ioctl(fd, MOTO_L_ON);
+}
+
+void motor_l_off(int fd)
+{
+    ioctl(fd, MOTO_L_OFF);
+}
+
+void motor_r_foward(int fd)
+{
+    ioctl(fd, MOTO_R_F);
+}
+*/
+
+
+/*********************************************
+**this is a API function, 
+*input: leftspeed: left motor speed
+*          rightspeed: right motor speed
+* output: set the right parameter to th global vairable
+*           so that the motoRC and mtotLC can read and change as commanded
+* return :the status of motor 
+*
+**********************************************/
+int motor(int leftSpeed, int rightSpeed)
+{
+    int ilspeed = 0;/*leftspeed*/
+    int irspeed = 0;/*rightspeed*/
+    int ret     = 0;
+    ilspeed = checkIn(leftSpeed, MAXSPEED);/*input check*/
+    irspeed = checkIn(rightSpeed, MAXSPEED);
+
+    motor_ctrl *motor_control;
+    memset(motor_control, 0, sizeof(motor_ctrl));
+    
+    if(ilspeed >= 0)
+    {/*forward*/
+        motor_control->left_flag = MOTO_L_F;
+    }
+    else
+    {/*backward*/
+        motor_control->left_flag = MOTO_L_B;
+    }
+
+    motor_control->left_speed= speed(abs(leftSpeed));
+    if(irspeed >= 0)
+    {
+        motor_control->right_flag = MOTO_R_F;
+    }
+    else
+    {
+        motor_control->left_flag = MOTO_R_B;
+    }
+    motor_control->left_speed = speed(abs(rightSpeed));
+
+    memcpy(&glb_motor, motor_control, sizeof(motor_ctrl));
+    
+    return ret;
+}
+
+/************************************************
+*the thread control right motor
+*
+*************************************************/
+void motorRC(void)
+{
+    printf("motor thread start\n");
+    while(1)
+    {
+        ioctl(fd, glb_motor.right_flag);
+        
+        while(1)
+        {
+            ioctl (fd,MOTO_R_ON);
+            usleep(glb_motor.right_speed.ontime);
+            ioctl (fd,MOTO_R_OFF);
+            usleep(glb_motor.right_speed.offtime);
+        }
+    }
+}
+
+/************************************************
+*the thread control left motor
+*
+*************************************************/
+void motorLC(void)
+{
+    printf("motor thread start\n");
+    while(1)
+    {
+        ioctl(fd, glb_motor.left_flag);
+        while(1)
+        {
+            ioctl (fd,MOTO_R_ON);
+            usleep(glb_motor.left_speed.ontime);
+            ioctl (fd,MOTO_R_OFF);
+            usleep(glb_motor.left_speed.offtime);
+        }
+    }
+}
+
+/************************************************
+*
+*
+*************************************************/
+int motor_init(){
+    int ret ;
+    pthread_t motorL;
+    pthread_t motorR;
+  
+        
+    fd = open (MOTOR ,O_RDWR);    
+    if (fd < 0)
+    {        
+        perror("open");        
+        exit(0);    
+    }    
+    msg_print("motor", msg_pri_comm, "motor opened, fd %d\n",fd);
+    
+    ret = pthread_create(&motorL, NULL, (void *)motorLC, NULL);
+    ret = pthread_create(&motorR, NULL, (void *)motorRC, NULL);
+    return ret;
+}

@@ -1,0 +1,81 @@
+/*
+*robot_lib.h
+*
+*head file 
+*/
+#ifndef __ROBOT_LIB_H__
+#define __ROBOT_LIB_H__
+
+
+#include <stdlib.h>
+#include <string.h>
+#include <memory.h>
+#include <stdio.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <netdb.h> //域名解析需要
+#include <unistd.h>
+#include <time.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <semaphore.h>
+#include <signal.h>
+
+#include <semaphore.h>
+#include <pthread.h>
+#include <linux/reboot.h>
+
+#include <fcntl.h>
+#include <limits.h>
+#include <iconv.h>
+
+#include <stdarg.h>
+
+#include "robot_event.h"
+#include "robot_data.h"
+
+#include "lib_print.h"
+#include "lib_motor.h"
+#include "timer.h"
+
+/*===========================================================
+                define modules
+===========================================================*/
+#define MOD_ROBOT_MAIN      "ROBOT_MAIN"
+#define MOD_ROBOT_MOTOR     "ROBOT_MOTOR"
+#define MOD_LOG             "LOG"
+
+typedef int bool;
+
+
+#define NVD_NIC_NAME                "eth0"
+
+
+#define IP_ARRAY(addr) \
+    ((unsigned char *)&addr)[3], \
+    ((unsigned char *)&addr)[2], \
+    ((unsigned char *)&addr)[1], \
+    ((unsigned char *)&addr)[0]
+#define IP_STRING "%u.%u.%u.%u"
+
+#define MAC_ARRAY(addr) \
+    ((unsigned char *)addr)[0], \
+    ((unsigned char *)addr)[1], \
+    ((unsigned char *)addr)[2], \
+    ((unsigned char *)addr)[3], \
+    ((unsigned char *)addr)[4], \
+    ((unsigned char *)addr)[5]
+#define MAC_STRING "%02x:%02x:%02x:%02x:%02x:%02x"
+
+extern unsigned short   chksum16(unsigned short *data, unsigned int data_len);
+extern char *result(int n);
+
+#endif

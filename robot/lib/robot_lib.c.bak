@@ -1,0 +1,27 @@
+#include "robot_lib.h"
+
+
+unsigned short chksum16(unsigned short *data, unsigned int data_len)
+{
+    int sum = 0;
+
+    while ( data_len > 1 )
+    {
+        sum += *data;
+        data++;
+        data_len -= 2;
+    }
+
+    if ( data_len > 0 )
+    {
+        sum += *(unsigned char *)data;
+    }
+
+    sum = ( sum >> 16 ) + ( sum & 0xffff );
+    sum += ( sum >> 16 );
+    sum = ~sum;
+
+    return (unsigned short)sum;
+}
+
+

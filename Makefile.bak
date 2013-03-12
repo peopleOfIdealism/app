@@ -1,0 +1,41 @@
+include config.mk
+
+SUB_TARGET = build_in.o
+export SUB_TARGET
+
+ROBOT = robot
+export ROBOT
+
+.PHONY: all clean install version rebuild
+.PHONY: $(SUB_TARGET) $(GLB_OBJ)
+.PHONY: $(ROBOT)
+
+#rebuild:clean all install
+
+all:$(ROBOT)
+
+# ROBOT
+$(ROBOT):$(GLB_OBJ)
+	$(MAKE) -C $@
+
+clean:
+	$(MAKE) -C $(ROBOT) clean
+	-rm -rf $(EXECDIR)/*
+
+
+install:
+#$(PJT_DIR)/bin
+	-rm -rf $(EXECDIR)/*
+	mkdir -p $(EXECDIR)
+	#find $(PJT_DIR)/ -name '*.[ch]' | xargs -i cp {} $(EXECDIR)
+	cp $(PJT_DIR)/$(ROBOT)/$(ROBOT) $(EXECDIR)
+	find $(PJT_DIR)/ -name '*.so' | xargs -i cp {} $(EXECDIR)
+	$(STRIP) $(EXECDIR)/$(ROBOT)
+	#cp -a $(PJT_DIR)/web/www $(EXECDIR)
+	find $(EXECDIR)/ -name '.svn' | xargs rm -rf
+	find $(EXECDIR)/ -name '*.Cab' | xargs chmod 644
+
+display:
+	@echo 'CFLAGS=$(CFLAGS)'
+	@echo
+	@echo 'LIBS_A=$(LIBS_A)'
